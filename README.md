@@ -91,3 +91,7 @@ Playlist updates (add/remove songs) take effect immediately — no stream restar
 /etc/liquidsoap/
 └── icecast.liq        # Liquidsoap script
 ```
+
+## License
+
+MIT
