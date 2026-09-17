@@ -132,9 +132,30 @@ export function isStreamRunning(config: IcecastConfig): boolean {
 
 const sleep = (ms: number): Promise<void> => new Promise((r) => setTimeout(r, ms));
 
+function commandExists(cmd: string): boolean {
+  try {
+    const res = spawnSync('which', [cmd], { encoding: 'utf-8' });
+    return res.status === 0;
+  } catch {
+    return false;
+  }
+}
+
 export async function startStream(config: IcecastConfig): Promise<ActionResult> {
   if (isStreamRunning(config)) {
     return { ok: true, message: 'Stream is already running.' };
+  }
+  if (!commandExists('liquidsoap')) {
+    return {
+      ok: false,
+      message: 'liquidsoap is not installed. Run: sudo apt-get install -y liquidsoap',
+    };
+  }
+  if (!fs.existsSync(config.liqScript)) {
+    return {
+      ok: false,
+      message: `Missing Liquidsoap config: ${config.liqScript}. Create it (see README step 3).`,
+    };
   }
   const cmd =
     `nohup liquidsoap ${shellEscape(config.liqScript)} > /dev/null 2>&1 & echo $! > ${shellEscape(config.lsPidFile)}`;
@@ -142,6 +163,11 @@ export async function startStream(config: IcecastConfig): Promise<ActionResult> 
   await sleep(2000);
   if (isStreamRunning(config)) {
     return { ok: true, message: 'Stream started.' };
+  }
+  try {
+    fs.rmSync(config.lsPidFile, { force: true });
+  } catch {
+    /* ignore */
   }
   return { ok: false, message: 'Failed to start stream.' };
 }

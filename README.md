@@ -6,6 +6,17 @@ Full-stack TypeScript rewrite of the original PHP version:
 - **Backend:** Node.js + Express REST API (`src/`)
 - **Frontend:** TypeScript single-page app (`public/`)
 
+## Live demo (static showcase)
+
+The root `index.html` is a **self-contained static demo** of the admin interface — it runs entirely in the browser with dummy data (no server needed), so it can be hosted on GitHub Pages:
+
+- **Live:** `https://lucky-sphere.github.io/Icecast-Radio-Admin/`
+- Works standalone: just open `index.html` locally or drop it on any static host.
+- Simulated actions: upload, add/remove playlist songs, delete, start/stop stream, player.
+- `.nojekyll` is included so GitHub Pages serves the file directly.
+
+To enable GitHub Pages: push the repo, then go to **Settings → Pages**, set **Source** to branch `master` (root).
+
 ## Dependencies
 
 ```bash
@@ -156,6 +167,9 @@ Playlist updates (add/remove songs) take effect immediately — no stream restar
 
 ```
 /var/www/html/icecast/
+├── index.html          # Static demo of the UI (GitHub Pages showcase)
+├── .nojekyll           # Disables Jekyll on GitHub Pages
+├── setup.sh            # One-shot install: icecast2 + liquidsoap + config
 ├── src/
 │   ├── server.ts       # Express API
 │   └── icecast.ts      # Core logic (playlist, uploads, stream control)

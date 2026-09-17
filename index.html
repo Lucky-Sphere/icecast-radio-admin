@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Icecast Radio Admin — Demo</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #0f0f0f; color: #e0e0e0; min-height: 100vh; }
+.container { max-width: 1100px; margin: 0 auto; padding: 20px; }
+.header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; padding-bottom: 20px; border-bottom: 1px solid #2a2a2a; flex-wrap: wrap; gap: 10px; }
+.header h1 { font-size: 24px; color: #fff; }
+.header h1 span { color: #00d4aa; }
+.demo-note { font-size: 12px; color: #888; background: #222; border: 1px solid #2a2a2a; border-radius: 6px; padding: 6px 12px; }
+.demo-note a { color: #00d4aa; }
+
+.btn { display: inline-flex; align-items: center; gap: 6px; padding: 8px 18px; border: none; border-radius: 6px; font-size: 14px; cursor: pointer; text-decoration: none; transition: all .2s; }
+.btn-primary { background: #00d4aa; color: #000; }
+.btn-primary:hover { background: #00b894; }
+.btn-primary:disabled, .btn:disabled { opacity: .4; cursor: not-allowed; }
+.btn-danger { background: #e74c3c; color: #fff; }
+.btn-danger:hover { background: #c0392b; }
+.btn-secondary { background: #333; color: #e0e0e0; }
+.btn-secondary:hover { background: #444; }
+.btn-sm { padding: 5px 12px; font-size: 12px; }
+.card { background: #1a1a1a; border-radius: 10px; padding: 20px; margin-bottom: 20px; border: 1px solid #2a2a2a; }
+.card h2 { font-size: 16px; color: #888; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 15px; }
+.card h2 span { color: #e0e0e0; font-weight: 400; text-transform: none; letter-spacing: 0; }
+.grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
+table { width: 100%; border-collapse: collapse; }
+th, td { text-align: left; padding: 10px 8px; border-bottom: 1px solid #2a2a2a; font-size: 14px; }
+th { color: #888; font-weight: 600; text-transform: uppercase; font-size: 11px; letter-spacing: .5px; }
+tr:hover td { background: #222; }
+td:first-child { width: 30px; }
+td.size { color: #666; white-space: nowrap; }
+.upload-row { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+.upload-row input[type="file"] { flex: 1; min-width: 200px; color: #e0e0e0; }
+.msg { background: #00d4aa22; border: 1px solid #00d4aa44; color: #00d4aa; padding: 10px 16px; border-radius: 6px; margin-bottom: 20px; font-size: 14px; }
+.stats-row { display: flex; gap: 20px; margin-bottom: 15px; flex-wrap: wrap; }
+.stat-box { background: #222; border-radius: 6px; padding: 12px 18px; min-width: 120px; }
+.stat-box .num { font-size: 22px; font-weight: 700; color: #00d4aa; }
+.stat-box .lbl { font-size: 11px; color: #666; text-transform: uppercase; letter-spacing: .5px; margin-top: 2px; }
+.player-wrap { margin-top: 15px; }
+.stream-actions { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 10px; }
+.hint { color: #888; font-size: 13px; }
+.footer { text-align: center; margin-top: 30px; padding: 20px; color: #444; font-size: 12px; }
+@media (max-width: 768px) { .grid-2 { grid-template-columns: 1fr; } }
+</style>
+</head>
+<body>
+<div class="container">
+    <div class="header">
+        <h1>icecast<span>radio</span></h1>
+        <div class="demo-note">Static demo interface &mdash; <a href="https://github.com/Lucky-Sphere/Icecast-Radio-Admin" target="_blank">get the real app on GitHub</a></div>
+    </div>
+
+    <div class="card player-wrap" id="playerCard" style="text-align:center;">
+        <div style="display:flex;align-items:center;justify-content:center;gap:15px;flex-wrap:wrap;">
+            <button type="button" id="playBtn" class="btn btn-primary" style="font-size:16px;padding:10px 30px;">Play</button>
+            <div style="display:flex;align-items:center;gap:8px;">
+                <span style="color:#888;font-size:13px;">Vol</span>
+                <input type="range" id="volControl" min="0" max="100" value="80" style="width:100px;accent-color:#00d4aa;">
+            </div>
+        </div>
+        <p style="color:#666;font-size:12px;margin-top:8px;">Stream URL: <a href="#" style="color:#00d4aa;">http://demo-server:8000/stream</a></p>
+    </div>
+
+    <div id="msg"></div>
+
+    <div id="content"></div>
+
+    <div class="footer">
+        Icecast Radio Admin &mdash; Powered by Icecast2 + Liquidsoap &middot; Demo (dummy data, client-side only)
+    </div>
+</div>
+
+<script>
+(function () {
+    var state = {
+        running: true,
+        songs: [
+            { name: 'AURORA - Euphoria.mp3', size: 8621000 },
+            { name: 'D major.mp3', size: 4210000 },
+            { name: 'IGNITE - Claude.mp3', size: 9318000 },
+            { name: 'MACHINE - Claude.mp3', size: 8744000 },
+            { name: 'Midnight Drive.wav', size: 41232000 },
+            { name: 'RISE ETERNAL - Claude.mp3', size: 7986000 },
+            { name: 'Synthwave Sunrise.flac', size: 24510000 },
+            { name: 'The Long Way Home.mp3', size: 7352000 }
+        ],
+        playlist: ['MACHINE - Claude.mp3', 'IGNITE - Claude.mp3', 'RISE ETERNAL - Claude.mp3', 'D major.mp3']
+    };
+    var selected = { lib: {}, pl: {} };
+
+    function formatSize(bytes) {
+        if (bytes >= 1073741824) return (bytes / 1073741824).toFixed(2) + ' GB';
+        if (bytes >= 1048576) return (bytes / 1048576).toFixed(2) + ' MB';
+        if (bytes >= 1024) return (bytes / 1024).toFixed(2) + ' KB';
+        return bytes + ' B';
+    }
+
+    function esc(s) {
+        return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+    }
+
+    function msg(text, isErr) {
+        document.getElementById('msg').innerHTML =
+            '<div class="msg"' + (isErr ? ' style="background:#e74c3c22;border-color:#e74c3c44;color:#e74c3c;"' : '') + '>' + esc(text) + '</div>';
+        setTimeout(function () { document.getElementById('msg').innerHTML = ''; }, 4000);
+    }
+
+    function render() {
+        var content = document.getElementById('content');
+        var running = state.running;
+        var playerCard = document.getElementById('playerCard');
+        playerCard.style.display = running ? '' : 'none';
+        document.getElementById('playBtn').className = 'btn btn-primary';
+
+        var libRows = state.songs.map(function (s) {
+            var checked = selected.lib[s.name] ? ' checked' : '';
+            return '<tr><td><input type="checkbox" data-name="' + esc(s.name) + '"' + checked + '></td>' +
+                '<td>' + esc(s.name) + '</td><td class="size">' + formatSize(s.size) + '</td></tr>';
+        }).join('');
+        var plRows = state.playlist.map(function (s, i) {
+            var checked = selected.pl[s] ? ' checked' : '';
+            return '<tr><td><input type="checkbox" data-name="' + esc(s) + '"' + checked + '></td>' +
+                '<td style="color:#666">' + (i + 1) + '</td><td>' + esc(s) + '</td></tr>';
+        }).join('');
+
+        content.innerHTML =
+            '<div class="stats-row">' +
+                '<div class="stat-box"><div class="num">' + state.songs.length + '</div><div class="lbl">Songs Library</div></div>' +
+                '<div class="stat-box"><div class="num">' + state.playlist.length + '</div><div class="lbl">Playlist</div></div>' +
+                '<div class="stat-box"><div class="num">' + (running ? 'Live' : 'Off') + '</div><div class="lbl">Stream</div></div>' +
+            '</div>' +
+
+            '<div class="grid-2">' +
+                '<div class="card">' +
+                    '<h2>Upload Songs</h2>' +
+                    '<form id="uploadForm">' +
+                        '<div class="upload-row">' +
+                            '<input type="file" id="fileInput" multiple accept=".mp3,.ogg,.wav,.aac,.flac,.m4a">' +
+                            '<button type="submit" class="btn btn-primary btn-sm">Upload</button>' +
+                        '</div>' +
+                    '</form>' +
+                '</div>' +
+                '<div class="card">' +
+                    '<h2>Stream Control</h2>' +
+                    '<div class="stream-actions">' +
+                        (running
+                            ? '<button type="button" id="stopStream" class="btn btn-danger">Stop Stream</button>'
+                            : '<button type="button" id="startStream" class="btn btn-primary"' + (state.playlist.length === 0 ? ' disabled' : '') + '>Start Stream</button>') +
+                        '<a href="#" class="btn btn-secondary" onclick="return false;">Icecast Status</a>' +
+                    '</div>' +
+                    (running || state.playlist.length > 0 ? '' : '<p class="hint">Add songs to the playlist before starting.</p>') +
+                '</div>' +
+            '</div>' +
+
+            '<div class="grid-2">' +
+                '<div class="card">' +
+                    '<h2>Music Library <span>(' + state.songs.length + ')</span></h2>' +
+                    (state.songs.length === 0
+                        ? '<p class="hint">No songs uploaded yet.</p>'
+                        : '<table><thead><tr><th></th><th>File</th><th>Size</th></tr></thead><tbody>' + libRows + '</tbody></table>' +
+                          '<div style="display:flex;gap:8px;margin-top:10px;">' +
+                          '<button type="button" id="libAdd" class="btn btn-primary btn-sm">Add to Playlist</button>' +
+                          '<button type="button" id="libDelete" class="btn btn-danger btn-sm">Delete</button>' +
+                          '</div>') +
+                '</div>' +
+                '<div class="card">' +
+                    '<h2>Playlist <span>(' + state.playlist.length + ')</span></h2>' +
+                    (state.playlist.length === 0
+                        ? '<p class="hint">Playlist is empty.</p>'
+                        : '<table><thead><tr><th></th><th>#</th><th>Song</th></tr></thead><tbody>' + plRows + '</tbody></table>' +
+                          '<div style="margin-top:10px;">' +
+                          '<button type="button" id="plRemove" class="btn btn-danger btn-sm">Remove Selected</button>' +
+                          '</div>') +
+                '</div>' +
+            '</div>';
+
+        content.querySelectorAll('input[type="checkbox"]').forEach(function (cb) {
+            cb.addEventListener('change', function () {
+                var bag = cb.closest('table').querySelector('th:nth-child(2)').textContent === 'File' ? selected.lib : selected.pl;
+                if (cb.checked) bag[cb.getAttribute('data-name')] = true;
+                else delete bag[cb.getAttribute('data-name')];
+            });
+        });
+
+        var uploadForm = document.getElementById('uploadForm');
+        if (uploadForm) uploadForm.addEventListener('submit', function (e) {
+            e.preventDefault();
+            var names = [];
+            Array.prototype.forEach.call(document.getElementById('fileInput').files, function (f) {
+                names.push(f.name);
+            });
+            if (names.length === 0) { msg('Select a file to upload.', true); return; }
+            names.forEach(function (n) { state.songs.push({ name: n, size: 2621440 }); });
+            state.songs.sort(function (a, b) { return a.name.localeCompare(b.name); });
+            render();
+            msg(names.length + ' file(s) uploaded (demo).');
+        });
+
+        var startBtn = document.getElementById('startStream');
+        if (startBtn) startBtn.addEventListener('click', function () {
+            state.running = true;
+            render();
+            msg('Stream started.');
+        });
+        var stopBtn = document.getElementById('stopStream');
+        if (stopBtn) stopBtn.addEventListener('click', function () {
+            state.running = false;
+            render();
+            msg('Stream stopped.');
+        });
+
+        var libAdd = document.getElementById('libAdd');
+        if (libAdd) libAdd.addEventListener('click', function () {
+            var names = Object.keys(selected.lib);
+            if (!names.length) { msg('Select songs from the Music Library first.', true); return; }
+            var before = state.playlist.length;
+            names.forEach(function (n) {
+                if (state.playlist.indexOf(n) === -1) state.playlist.push(n);
+            });
+            selected.lib = {};
+            render();
+            msg(state.playlist.length === before ? 'No new songs added.' : 'Song(s) added to playlist.');
+        });
+
+        var libDelete = document.getElementById('libDelete');
+        if (libDelete) libDelete.addEventListener('click', function () {
+            var names = Object.keys(selected.lib);
+            if (!names.length) { msg('Select songs from the Music Library first.', true); return; }
+            if (!confirm('Delete selected songs?')) return;
+            state.songs = state.songs.filter(function (s) {
+                var keep = names.indexOf(s.name) === -1;
+                if (!keep) state.playlist = state.playlist.filter(function (p) { return p !== s.name; });
+                return keep;
+            });
+            selected.lib = {};
+            render();
+            msg(names.length + ' song(s) deleted.');
+        });
+
+        var plRemove = document.getElementById('plRemove');
+        if (plRemove) plRemove.addEventListener('click', function () {
+            var names = Object.keys(selected.pl);
+            if (!names.length) { msg('Select songs from the Playlist first.', true); return; }
+            state.playlist = state.playlist.filter(function (s) { return names.indexOf(s) === -1; });
+            selected.pl = {};
+            render();
+            msg('Song(s) removed from playlist.');
+        });
+    }
+
+    document.getElementById('playBtn').addEventListener('click', function () {
+        var b = this;
+        if (b.classList.contains('btn-danger')) {
+            b.classList.remove('btn-danger'); b.classList.add('btn-primary');
+            b.textContent = 'Play';
+        } else {
+            b.classList.remove('btn-primary'); b.classList.add('btn-danger');
+            b.textContent = 'Stop';
+        }
+    });
+
+    render();
+})();
+</script>
+</body>
+</html>
