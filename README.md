@@ -10,7 +10,7 @@ Full-stack TypeScript rewrite of the original PHP version:
 
 The root `index.html` is a **self-contained static demo** of the admin interface — it runs entirely in the browser with dummy data (no server needed), so it can be hosted on GitHub Pages:
 
-- **Live:** `https://lucky-sphere.github.io/Icecast-Radio-Admin/`
+- **Live:** `https://lucky-sphere.github.io/icecast-radio-admin/`
 - Works standalone: just open `index.html` locally or drop it on any static host.
 - Simulated actions: upload, add/remove playlist songs, delete, start/stop stream, player.
 - `.nojekyll` is included so GitHub Pages serves the file directly.
