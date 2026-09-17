@@ -51,7 +51,9 @@ td.size { color: #666; white-space: nowrap; }
 <div class="container">
     <div class="header">
         <h1>icecast<span>radio</span></h1>
-        <div class="demo-note">Static demo interface &mdash; <a href="https://github.com/Lucky-Sphere/Icecast-Radio-Admin" target="_blank">get the real app on GitHub</a></div>
+        <div class="demo-note">Static demo interface &mdash; <a href="https://github.com/Lucky-Sphere/Icecast-Radio-Admin" target="_blank">get the real app on GitHub</a>
+            <button type="button" id="randomize" class="btn btn-secondary btn-sm" style="margin-left:8px;">Regenerate data</button>
+        </div>
     </div>
 
     <div class="card player-wrap" id="playerCard" style="text-align:center;">
@@ -76,20 +78,50 @@ td.size { color: #666; white-space: nowrap; }
 
 <script>
 (function () {
-    var state = {
-        running: true,
-        songs: [
-            { name: 'AURORA - Euphoria.mp3', size: 8621000 },
-            { name: 'D major.mp3', size: 4210000 },
-            { name: 'IGNITE - Claude.mp3', size: 9318000 },
-            { name: 'MACHINE - Claude.mp3', size: 8744000 },
-            { name: 'Midnight Drive.wav', size: 41232000 },
-            { name: 'RISE ETERNAL - Claude.mp3', size: 7986000 },
-            { name: 'Synthwave Sunrise.flac', size: 24510000 },
-            { name: 'The Long Way Home.mp3', size: 7352000 }
-        ],
-        playlist: ['MACHINE - Claude.mp3', 'IGNITE - Claude.mp3', 'RISE ETERNAL - Claude.mp3', 'D major.mp3']
-    };
+    var ARTISTS = [
+        'MACHINE', 'IGNITE', 'RISE ETERNAL', 'AURORA', 'NOVA', 'ECHO BEAT',
+        'MIDNIGHT DRIVE', 'STATIC MOTION', 'NEON DISTRICT', 'GOLDEN HOUR',
+        'LOST SIGNAL', 'CRIMSON WAVE', 'SOLAR FLARE', 'VELVET SKY'
+    ];
+    var TITLES = [
+        'Claude', 'Euphoria', 'Synthwave Sunrise', 'The Long Way Home',
+        'Rain City', 'Gravity', 'Electric Shadows', 'D major', 'Neon Rain',
+        'Afterglow', 'Underground', 'Horizon Line', 'Paper Planes', 'Wildfire'
+    ];
+    var EXTS = ['mp3', 'mp3', 'mp3', 'wav', 'flac', 'm4a', 'ogg'];
+
+    function randomSong(used) {
+        var artist = ARTISTS[Math.floor(Math.random() * ARTISTS.length)];
+        var title = TITLES[Math.floor(Math.random() * TITLES.length)];
+        var key = artist + '|' + title;
+        if (used[key]) return null;
+        var ext = EXTS[Math.floor(Math.random() * EXTS.length)];
+        var size = Math.round((1.5 + Math.random() * 9) * 1048576);
+        if (ext !== 'mp3') size = Math.round(size * (2 + Math.random() * 3));
+        return { name: artist + ' - ' + title + '.' + ext, size: size, key: key };
+    }
+
+    function buildRandomData() {
+        var count = 8 + Math.floor(Math.random() * 5);
+        var songs = [];
+        var used = {};
+        var guard = 0;
+        while (songs.length < count && guard < 200) {
+            guard++;
+            var song = randomSong(used);
+            if (!song) continue;
+            used[song.key] = true;
+            songs.push({ name: song.name, size: song.size });
+        }
+        songs.sort(function (a, b) { return a.name.localeCompare(b.name); });
+        var playlist = songs
+            .filter(function () { return Math.random() < 0.5; })
+            .slice(0, 5)
+            .map(function (s) { return s.name; });
+        return { running: true, songs: songs, playlist: playlist };
+    }
+
+    var state = buildRandomData();
     var selected = { lib: {}, pl: {} };
 
     function formatSize(bytes) {
@@ -261,6 +293,13 @@ td.size { color: #666; white-space: nowrap; }
             b.classList.remove('btn-primary'); b.classList.add('btn-danger');
             b.textContent = 'Stop';
         }
+    });
+
+    document.getElementById('randomize').addEventListener('click', function () {
+        state = buildRandomData();
+        selected = { lib: {}, pl: {} };
+        render();
+        msg('Lists cleared - dummy data regenerated.');
     });
 
     render();
