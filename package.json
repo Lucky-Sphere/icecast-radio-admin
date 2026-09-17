@@ -1,0 +1,22 @@
+{
+  "name": "icecast-radio-admin",
+  "version": "2.0.0",
+  "description": "Icecast2 radio station admin with playlist management and Liquidsoap streaming backend",
+  "main": "dist/server.js",
+  "scripts": {
+    "build": "tsc -p tsconfig.server.json && tsc -p tsconfig.client.json",
+    "start": "node dist/server.js",
+    "dev": "tsc -p tsconfig.server.json && tsc -p tsconfig.client.json && node --watch dist/server.js"
+  },
+  "license": "MIT",
+  "dependencies": {
+    "express": "^4.19.2",
+    "multer": "^2.4.0"
+  },
+  "devDependencies": {
+    "@types/express": "^4.17.21",
+    "@types/multer": "^2.2.0",
+    "@types/node": "^20.14.0",
+    "typescript": "^5.5.0"
+  }
+}

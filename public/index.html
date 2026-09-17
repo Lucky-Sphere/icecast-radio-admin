@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Icecast Radio Admin</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="container">
+    <div class="header">
+        <h1>icecast<span>radio</span></h1>
+    </div>
+
+    <div id="player-wrap" class="card player-wrap" style="display:none;text-align:center;">
+        <audio id="player">
+            <source id="player-src" src="" type="audio/mpeg">
+        </audio>
+        <div style="display:flex;align-items:center;justify-content:center;gap:15px;flex-wrap:wrap;">
+            <button type="button" id="playBtn" class="btn btn-primary" style="font-size:16px;padding:10px 30px;">Play</button>
+            <div style="display:flex;align-items:center;gap:8px;">
+                <span style="color:#888;font-size:13px;">Vol</span>
+                <input type="range" id="volControl" min="0" max="100" value="80" style="width:100px;accent-color:#00d4aa;">
+            </div>
+        </div>
+        <p style="color:#666;font-size:12px;margin-top:8px;">Stream URL: <a id="stream-link" href="#" style="color:#00d4aa;"></a></p>
+    </div>
+
+    <div id="content-section">
+        <div class="loading">Loading&hellip;</div>
+    </div>
+</div>
+
+<script src="app.js"></script>
+</body>
+</html>

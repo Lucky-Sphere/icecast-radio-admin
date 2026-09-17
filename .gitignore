@@ -1,1 +1,5 @@
-music/*.mp3
+node_modules/
+dist/
+music/*
+public/app.js
+public/app.js.map
